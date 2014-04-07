@@ -1,0 +1,114 @@
+# --                                                            ; {{{1
+#
+# File        : fnby/parser.tt
+# Maintainer  : Felix C. Stegerman <flx@obfusk.net>
+# Date        : 2014-04-08
+#
+# Copyright   : Copyright (C) 2014  Felix C. Stegerman
+# Licence     : LGPLv3+
+#
+# --                                                            ; }}}1
+
+module Fnby::Parser
+  grammar Fnby
+    rule file
+      tokens
+    end
+    rule tokens
+      sep tokens:( token sep )* {
+        def value
+          tokens.elements.map { |x| x.token.value }
+        end
+      }
+    end
+    rule token
+      symbol / keyword / list / vector / hash / set / number / string
+        / lambda / quote
+    end
+    rule symbol
+      word:( ![0-9] word_char word_char* ) {
+        def value
+          Sym.new word.text_value
+        end
+      }
+    end
+    rule keyword
+      ':' symbol {
+        def value
+          symbol.word.text_value.to_sym
+        end
+      }
+    end
+    rule list
+      '(' tokens ')' {
+        def value
+          List.new *tokens.value
+        end
+      }
+    end
+    rule vector
+      '[' tokens ']' {
+        def value
+          Vector.new *tokens.value
+        end
+      }
+    end
+    rule hash
+      '{' tokens '}' {
+        def value
+          Hash[tokens.value.each_slice(2).to_a]
+        end
+      }
+    end
+    rule set
+      '#{' tokens '}' {
+        def value
+          Set.new tokens.value
+        end
+      }
+    end
+    rule number
+      '-'? [0-9]+ ( '.' [0-9]+ )? {
+        def value
+          Float text_value  # TODO
+        end
+      }
+    end
+    rule string
+      '"' string:( '\"' / !'"' . )* '"' {
+        def value
+          string.text_value
+        end
+      }
+    end
+    rule lambda
+      '#(' tokens ')' {
+        def value
+          Lambda.new tokens.value
+        end
+      }
+    end
+    rule quote
+      "'" token {
+        def value
+          Quote.new token.value
+        end
+      }
+    end
+    # ... TODO ...
+    rule comment
+      ';' ( !"\n" . )* "\n"?
+    end
+    rule space
+      ( ' ' / "\t" / "\n" / ',' )
+    end
+    rule sep
+      ( space / comment )*
+    end
+    rule word_char
+      [A-Za-z0-9$%^&*_+=<>|?/-]
+    end
+  end
+end
+
+# vim: set tw=70 sw=2 sts=2 et fdm=marker :
