@@ -2,7 +2,7 @@
 #
 # File        : fnby/parser.tt
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2014-04-08
+# Date        : 2014-04-09
 #
 # Copyright   : Copyright (C) 2014  Felix C. Stegerman
 # Licence     : LGPLv3+
@@ -12,101 +12,202 @@
 module Fnby::Parser
   grammar Fnby
     rule file
-      tokens
+      elems
     end
-    rule tokens
-      sep tokens:( token sep )* {
-        def value
-          tokens.elements.map { |x| x.token.value }
+    rule elems
+      sep elems:( elem sep )* {
+        def to_data
+          elems.elements.map { |x| x.elem.to_data }
         end
       }
     end
-    rule token
-      symbol / keyword / list / vector / hash / set / number / string
+    rule elem
+      symbol / keyword / string / regex
+        / float / rational / integer
+        / boolean / nil
+        / list / vector / map / set
         / lambda / quote
     end
     rule symbol
-      word:( ![0-9] word_char word_char* ) {
-        def value
-          Sym.new word.text_value
+      !( boolean / nil / [+-] [0-9.] )
+        word:( ![0-9] word_char word_char* ) {
+        def to_data
+          ::Fnby::Data::Symbol.new word.text_value.to_sym
         end
       }
     end
     rule keyword
-      ':' symbol {
-        def value
-          symbol.word.text_value.to_sym
-        end
-      }
-    end
-    rule list
-      '(' tokens ')' {
-        def value
-          List.new *tokens.value
-        end
-      }
-    end
-    rule vector
-      '[' tokens ']' {
-        def value
-          Vector.new *tokens.value
-        end
-      }
-    end
-    rule hash
-      '{' tokens '}' {
-        def value
-          Hash[tokens.value.each_slice(2).to_a]
-        end
-      }
-    end
-    rule set
-      '#{' tokens '}' {
-        def value
-          Set.new tokens.value
-        end
-      }
-    end
-    rule number
-      '-'? [0-9]+ ( '.' [0-9]+ )? {
-        def value
-          Float text_value  # TODO
+      ':' word:( word_char )+ {
+        def to_data
+          word.text_value.to_sym
         end
       }
     end
     rule string
-      '"' string:( '\"' / !'"' . )* '"' {
-        def value
-          string.text_value
+      '"' string:( string_elem )* '"' {
+        def to_data
+          string.elements.map { |x| x.to_data } *''
+        end
+      }
+    end
+    rule string_elem
+      string_esc_uni / string_esc_hex / string_esc_oct
+        / string_esc_special / string_char
+    end
+    rule string_esc_uni
+      '\\u' hex:( [0-9a-f] 4..4 ) {
+        def to_data
+          Integer(hex.text_value, 16).chr(Encoding::UTF_8)
+        end
+      }
+    end
+    rule string_esc_hex
+      '\\x' hex:( [0-9a-f] 2..2 ) {
+        def to_data
+          Integer(hex.text_value, 16).chr
+        end
+      }
+    end
+    rule string_esc_oct
+      '\\0' oct:( [0-7] 2..2 ) {
+        def to_data
+          Integer(oct.text_value, 8).chr
+        end
+      }
+    end
+    rule string_esc_special
+      '\\' esc:[0abfnrtv] {
+        def to_data
+          { '0' => "\0", 'a' => "\a", 'b' => "\b", 'f' => "\f",
+            'n' => "\n", 'r' => "\r", 't' => "\t", 'v' => "\v" } \
+          [esc.text_value]
+        end
+      }
+    end
+    rule string_char
+      ( '\\' chr:. / !'"' chr:. ) {
+        def to_data
+          chr.text_value
+        end
+      }
+    end
+    rule regex
+      '#' string {
+        def to_data
+          Regexp.new string.to_data
+        end
+      }
+    end
+    rule float
+      ( ( digits '.' digits / '.' digits / digits '.' ) exp?
+        / digits exp ) {
+        def to_data
+          Float text_value.sub(/\.e/, '.0e').sub(/\.$/, '.0')
+        end
+      }
+    end
+    rule digits
+      [+-]? [0-9]+
+    end
+    rule exp
+      'e' digits
+    end
+    rule rational
+      n:integer '/' d:integer {
+        def to_data
+          Rational n.to_data, d.to_data
+        end
+      }
+    end
+    rule integer
+      s:[+-]? v:( int_radix / int_oct_hex_dec ) {
+        def to_data
+          n = v.to_data; s.text_value == '-' ? -n : n
+        end
+      }
+    end
+    rule int_radix
+      r:( [0-9] 1..2 ) 'r' v:[0-9a-z]+ {
+        def to_data
+          Integer(v.text_value, Integer(r.text_value))
+        end
+      }
+    end
+    rule int_oct_hex_dec
+      ( '0x' [0-9a-f]+ / [0-9]+ ) {
+        def to_data
+          Integer text_value
+        end
+      }
+    end
+    rule boolean
+      ( 'true' / 'false' ) {
+        def to_data
+          text_value == 'true' ? true : false
+        end
+      }
+    end
+    rule nil
+      'nil' {
+        def to_data
+          nil
+        end
+      }
+    end
+    rule list
+      '(' elems ')' {
+        def to_data
+          ::Fnby::Data::List.new elems.to_data
+        end
+      }
+    end
+    rule vector
+      '[' elems ']' {
+        def to_data
+          ::Fnby::Data::Vector.new elems.to_data
+        end
+      }
+    end
+    rule map
+      '{' elems '}' {
+        def to_data
+          ::Fnby::Data::Map.new elems.to_data
+        end
+      }
+    end
+    rule set
+      '#{' elems '}' {
+        def to_data
+          ::Fnby::Data::Set.new elems.to_data
         end
       }
     end
     rule lambda
-      '#(' tokens ')' {
-        def value
-          Lambda.new tokens.value
+      '#(' elems ')' {
+        def to_data
+          ::Fnby::Data::Lambda.new elems.to_data
         end
       }
     end
     rule quote
-      "'" token {
-        def value
-          Quote.new token.value
+      "'" elem {
+        def to_data
+          ::Fnby::Data::Quote.new elem.to_data
         end
       }
     end
-    # ... TODO ...
+    # ...
     rule comment
       ';' ( !"\n" . )* "\n"?
     end
     rule space
-      ( ' ' / "\t" / "\n" / ',' )
+      ( '[\s,]'r )
     end
     rule sep
       ( space / comment )*
     end
     rule word_char
-      [A-Za-z0-9$%^&*_+=<>|?/-]
+      [A-Za-z0-9!$%^&*_+=<>|?/-]
     end
   end
 end
