@@ -1,16 +1,16 @@
 # --                                                            ; {{{1
 #
-# File        : fnby/parser.tt
+# File        : fnxnl/parser.tt
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2014-04-09
+# Date        : 2014-04-18
 #
 # Copyright   : Copyright (C) 2014  Felix C. Stegerman
 # Licence     : LGPLv3+
 #
 # --                                                            ; }}}1
 
-module Fnby::Parser
-  grammar Fnby
+module Fnxnl::Parser
+  grammar Fnxnl
     rule file
       elems
     end
@@ -32,7 +32,7 @@ module Fnby::Parser
       !( boolean / nil / [+-] [0-9.] )
         word:( ![0-9] word_char word_char* ) {
         def to_data
-          ::Fnby::Data::Symbol.new word.text_value.to_sym
+          ::Fnxnl::Data::Symbol.new word.text_value.to_sym
         end
       }
     end
@@ -157,42 +157,42 @@ module Fnby::Parser
     rule list
       '(' elems ')' {
         def to_data
-          ::Fnby::Data::List.new elems.to_data
+          ::Fnxnl::Data::List.new elems.to_data
         end
       }
     end
     rule vector
       '[' elems ']' {
         def to_data
-          ::Fnby::Data::Vector.new elems.to_data
+          ::Fnxnl::Data::Vector.new elems.to_data
         end
       }
     end
     rule map
       '{' elems '}' {
         def to_data
-          ::Fnby::Data::Map.new elems.to_data
+          ::Fnxnl::Data::Map.new elems.to_data
         end
       }
     end
     rule set
       '#{' elems '}' {
         def to_data
-          ::Fnby::Data::Set.new elems.to_data
+          ::Fnxnl::Data::Set.new elems.to_data
         end
       }
     end
     rule lambda
       '#(' elems ')' {
         def to_data
-          ::Fnby::Data::Lambda.new elems.to_data
+          ::Fnxnl::Data::Lambda.new elems.to_data
         end
       }
     end
     rule quote
       "'" elem {
         def to_data
-          ::Fnby::Data::Quote.new elem.to_data
+          ::Fnxnl::Data::Quote.new elem.to_data
         end
       }
     end

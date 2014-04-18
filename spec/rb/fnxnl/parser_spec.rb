@@ -1,20 +1,20 @@
 # --                                                            ; {{{1
 #
-# File        : fnby/parser_spec.rb
+# File        : fnxnl/parser_spec.rb
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2014-04-09
+# Date        : 2014-04-18
 #
 # Copyright   : Copyright (C) 2014  Felix C. Stegerman
 # Licence     : LGPLv3+
 #
 # --                                                            ; }}}1
 
-require 'fnby/parser'
+require 'fnxnl/parser'
 
-fp = Fnby::Parser
-fd = Fnby::Data
+fp = Fnxnl::Parser
+fd = Fnxnl::Data
 
-describe 'fnby/parser' do
+describe 'fnxnl/parser' do
 
   context 'parse' do
     it 'parses symbols' do

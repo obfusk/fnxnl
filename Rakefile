@@ -13,23 +13,6 @@ task 'spec:less' do
   sh 'rspec -cfd --tty | less -R'
 end
 
-desc 'Check for warnings'
-task :warn do
-  raise 'TODO'
-  # sh 'ruby -w -I lib -r fnby/... -e ""'
-end
-
-desc 'Check for warnings in specs'
-task 'warn:spec' do
-  reqs = Dir['spec/**/*.rb'].sort.map { |x| "-r ./#{x}" } * ' '
-  sh "ruby -w -I lib -r rspec #{reqs} -e ''"
-end
-
-desc 'Check for warnings in specs (but not void context)'
-task 'warn:spec:novoid' do
-  sh 'rake warn:spec 2>&1 | grep -v "void context"'
-end
-
 desc 'Generate docs'
 task :docs do
   sh 'yardoc | cat'
@@ -43,17 +26,4 @@ end
 desc 'Cleanup'
 task :clean do
   sh 'rm -rf .yardoc/ doc/ *.gem'
-end
-
-desc 'Build SNAPSHOT gem'
-task :snapshot do
-  v = Time.new.strftime '%Y%m%d%H%M%S'
-  f = 'lib/fnby/util/version.rb'
-  sh "sed -ri~ 's!(SNAPSHOT)!\\1.#{v}!' #{f}"
-  sh 'gem build fnby-util.gemspec'
-end
-
-desc 'Undo SNAPSHOT gem'
-task 'snapshot:undo' do
-  sh 'git checkout -- lib/fnby/util/version.rb'
 end

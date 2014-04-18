@@ -1,0 +1,31 @@
+{
+  "name"            : "fnxnl",
+  "homepage"        : "https://github.com/obfusk/fnxnl",
+  "description"     : "...",
+
+  "version"         : "...",
+  "author"          : "Felix C. Stegerman <flx@obfusk.net>",
+
+  "keywords"        : [ "..." ],
+
+  "licenses": [
+    { "type"        : "LGPLv3+",
+      "url"         : "http://www.gnu.org/licenses/lgpl-3.0.html" }
+  ],
+
+  "repository": {
+    "type"          : "git",
+    "url"           : "https://github.com/obfusk/fnxnl.git"
+  },
+
+  "main"            : "lib/js/...",
+  "files"           : [ "lib/js/...", "README.md" ],
+
+  "dependencies"    : { "underscore": ">=1.6.0" },
+  "devDependencies" : { "coffee-script": ">=1.7.1" },
+
+  "scripts": {
+    "prepublish"    : "coffee -c ...",
+    "test"          : "jasmine-node --coffee spec/js/"
+  }
+}

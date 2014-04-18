@@ -1,15 +1,15 @@
 # --                                                            ; {{{1
 #
-# File        : fnby/data.rb
+# File        : fnxnl/data.rb
 # Maintainer  : Felix C. Stegerman <flx@obfusk.net>
-# Date        : 2014-04-09
+# Date        : 2014-04-18
 #
 # Copyright   : Copyright (C) 2014  Felix C. Stegerman
 # Licence     : LGPLv3+
 #
 # --                                                            ; }}}1
 
-module Fnby; module Data
+module Fnxnl; module Data
 
   class Node
     attr_reader :value
